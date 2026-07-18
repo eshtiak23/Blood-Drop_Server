@@ -32,7 +32,4 @@ const conversationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Ensure only one conversation per pair of users
-conversationSchema.index({ participants: 1 }, { unique: true });
-
 export default mongoose.model("Conversation", conversationSchema);

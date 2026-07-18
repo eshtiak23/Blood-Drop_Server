@@ -3,7 +3,7 @@ import Request from "../models/Request.js";
 import Notification from "../models/Notification.js";
 import User from "../models/User.js";
 import auth from "../middleware/auth.js";
-import { sendBloodRequestEmails } from "../utils/email.js";
+import { sendBloodRequestEmails, sendEmail } from "../utils/email.js";
 import { validateRequestForm } from "../utils/validate.js";
 
 const router = express.Router();

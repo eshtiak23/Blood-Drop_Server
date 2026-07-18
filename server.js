@@ -69,6 +69,9 @@ app.get("/", (req, res) => res.json({ name: "LifeDrop API", status: "running" })
 // Health check
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
+// 404 catch-all for unknown API routes
+app.use("/api", (req, res) => res.status(404).json({ error: "Route not found" }));
+
 // Error handler
 app.use(errorHandler);
 

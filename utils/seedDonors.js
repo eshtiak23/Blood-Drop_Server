@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import User from "../models/User.js";
-import donors from "../../client/src/data/donors.json" with { type: "json" };
+import donors from "../data/donors.json" with { type: "json" };
 
 dotenv.config({ path: new URL("../.env", import.meta.url) });
 

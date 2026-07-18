@@ -1,7 +1,6 @@
 import express from "express";
 import User from "../models/User.js";
 import Request from "../models/Request.js";
-import DonationLog from "../models/DonationLog.js";
 
 const router = express.Router();
 

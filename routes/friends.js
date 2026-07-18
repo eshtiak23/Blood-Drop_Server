@@ -118,12 +118,16 @@ router.post("/send/:userId", async (req, res) => {
       await existingReverse.save();
 
       // Notify the original sender that it was auto-accepted
-      await Notification.create({
-        userId: receiverId,
-        type: "friend_accepted",
-        title: "Connection Accepted",
-        message: `${req.user.name} accepted your connection request`,
-      });
+      try {
+        await Notification.create({
+          userId: receiverId,
+          type: "friend_accepted",
+          title: "Connection Accepted",
+          message: `${req.user.name} accepted your connection request`,
+        });
+      } catch (notifErr) {
+        console.error("[Notification] Failed to create auto-accept notification:", notifErr.message);
+      }
 
       return res.json({ request: existingReverse, autoAccepted: true });
     }
@@ -152,12 +156,16 @@ router.post("/send/:userId", async (req, res) => {
     const request = await FriendRequest.create({ sender: senderId, receiver: receiverId });
 
     // Notify receiver
-    await Notification.create({
-      userId: receiverId,
-      type: "friend_request",
-      title: "Connection Request",
-      message: `${req.user.name} wants to connect with you`,
-    });
+    try {
+      await Notification.create({
+        userId: receiverId,
+        type: "friend_request",
+        title: "Connection Request",
+        message: `${req.user.name} wants to connect with you`,
+      });
+    } catch (notifErr) {
+      console.error("[Notification] Failed to create friend request notification:", notifErr.message);
+    }
 
     res.status(201).json({ request });
   } catch (err) {
@@ -186,12 +194,16 @@ router.patch("/accept/:requestId", async (req, res) => {
     await request.save();
 
     // Notify the sender
-    await Notification.create({
-      userId: request.sender,
-      type: "friend_accepted",
-      title: "Connection Accepted",
-      message: `${req.user.name} accepted your connection request`,
-    });
+    try {
+      await Notification.create({
+        userId: request.sender,
+        type: "friend_accepted",
+        title: "Connection Accepted",
+        message: `${req.user.name} accepted your connection request`,
+      });
+    } catch (notifErr) {
+      console.error("[Notification] Failed to create friend accept notification:", notifErr.message);
+    }
 
     res.json({ request });
   } catch (err) {

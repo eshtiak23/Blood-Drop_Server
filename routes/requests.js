@@ -152,12 +152,16 @@ router.patch("/:id/accept", auth, async (req, res) => {
     request.status = "accepted";
     request.acceptedBy = req.user._id;
     await request.save();
-    await Notification.create({
-      userId: request.requester,
-      type: "request_accepted",
-      title: "Request Accepted",
-      message: `${req.user.name} (${req.user.phone}) accepted your blood request for ${request.patientName}`,
-    });
+    try {
+      await Notification.create({
+        userId: request.requester,
+        type: "request_accepted",
+        title: "Request Accepted",
+        message: `${req.user.name} (${req.user.phone}) accepted your blood request for ${request.patientName}`,
+      });
+    } catch (notifErr) {
+      console.error("[Notification] Failed to create accept notification:", notifErr.message);
+    }
     const populated = await request.populate("requester", "name email").populate("acceptedBy", "name phone bloodGroup");
     res.json({ request: populated });
   } catch (err) {
@@ -173,12 +177,16 @@ router.patch("/:id/complete", auth, async (req, res) => {
     if (request.status !== "accepted") return res.status(400).json({ error: "Request is not accepted" });
     request.status = "completed";
     await request.save();
-    await Notification.create({
-      userId: request.requester,
-      type: "request_completed",
-      title: "Request Completed",
-      message: `Your blood request for ${request.patientName} has been completed`,
-    });
+    try {
+      await Notification.create({
+        userId: request.requester,
+        type: "request_completed",
+        title: "Request Completed",
+        message: `Your blood request for ${request.patientName} has been completed`,
+      });
+    } catch (notifErr) {
+      console.error("[Notification] Failed to create complete notification:", notifErr.message);
+    }
     const populated = await request.populate("requester", "name email").populate("acceptedBy", "name phone bloodGroup");
     res.json({ request: populated });
   } catch (err) {

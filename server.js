@@ -18,6 +18,7 @@ import feedbackRoutes from "./routes/feedback.js";
 import ratingRoutes from "./routes/ratings.js";
 import statsRoutes from "./routes/stats.js";
 import chatRoutes from "./routes/chat.js";
+import friendRoutes from "./routes/friends.js";
 import errorHandler from "./middleware/errorHandler.js";
 
 const app = express();
@@ -72,6 +73,7 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/ratings", ratingRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/friends", friendRoutes);
 
 // Root route
 app.get("/", (req, res) => res.json({ name: "LifeDrop API", status: "running" }));

@@ -8,6 +8,8 @@
  * - Fetching messages with pagination
  * - Marking messages as seen
  * - Getting total unread count for badge display
+ * - Deleting a single message (sender only)
+ * - Deleting an entire conversation and all its messages
  *
  * The controller works with Socket.IO via the `io` parameter
  * passed from the routes to enable real-time messaging.
@@ -27,7 +29,7 @@ export const getConversations = async (req, res) => {
   try {
     const userId = req.user._id;
     const conversations = await Conversation.find({ participants: userId })
-      .populate("participants", "name photo bloodGroup district area isAvailable phone")
+      .populate("participants", "name photo bloodGroup district area isAvailable")
       .sort({ updatedAt: -1 });
 
     // Transform to show only the OTHER user's info (not the current user)
@@ -67,20 +69,20 @@ export const getOrCreateConversation = async (req, res) => {
     }
 
     // Check if other user exists
-    const otherUser = await User.findById(otherId).select("name photo bloodGroup district area isAvailable phone");
+    const otherUser = await User.findById(otherId).select("name photo bloodGroup district area isAvailable");
     if (!otherUser) return res.status(404).json({ error: "User not found" });
 
     // Check for existing conversation (participants in either order)
     let conversation = await Conversation.findOne({
       participants: { $all: [userId, otherId], $size: 2 },
-    }).populate("participants", "name photo bloodGroup district area isAvailable phone");
+    }).populate("participants", "name photo bloodGroup district area isAvailable");
 
     if (!conversation) {
       conversation = await Conversation.create({
         participants: [userId, otherId],
         unreadCount: {},
       });
-      conversation = await conversation.populate("participants", "name photo bloodGroup district area isAvailable phone");
+      conversation = await conversation.populate("participants", "name photo bloodGroup district area isAvailable");
     }
 
     res.json({ conversation });
@@ -256,6 +258,118 @@ export const getUnreadCount = async (req, res) => {
     });
 
     res.json({ unreadCount: total });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * DELETE /api/chat/message/:messageId
+ * Deletes a single message. Only the sender can delete their own message.
+ * If the deleted message was the conversation's lastMessage, updates it
+ * to the most recent remaining message (or clears it).
+ * Emits "message:deleted" to the conversation room for real-time removal.
+ */
+export const deleteMessage = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { messageId } = req.params;
+
+    const message = await Message.findById(messageId);
+    if (!message) return res.status(404).json({ error: "Message not found" });
+    if (message.senderId.toString() !== userId.toString()) {
+      return res.status(403).json({ error: "You can only delete your own messages" });
+    }
+
+    const conversationId = message.conversationId;
+
+    // Check user is a participant
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation || !conversation.participants.some((p) => p.equals(userId))) {
+      return res.status(403).json({ error: "Not a participant" });
+    }
+
+    // Delete the message
+    await Message.findByIdAndDelete(messageId);
+
+    // If this was the lastMessage, update conversation to previous message
+    if (
+      conversation.lastMessage &&
+      conversation.lastMessage.senderId?.toString() === message.senderId.toString() &&
+      conversation.lastMessage.text === (message.text || (message.image ? "📷 Image" : ""))
+    ) {
+      const prevMessage = await Message.findOne({ conversationId })
+        .sort({ createdAt: -1 })
+        .populate("senderId", "name");
+
+      if (prevMessage) {
+        await Conversation.findByIdAndUpdate(conversationId, {
+          lastMessage: {
+            text: prevMessage.text || (prevMessage.image ? "📷 Image" : ""),
+            senderId: prevMessage.senderId._id,
+            createdAt: prevMessage.createdAt,
+          },
+        });
+      } else {
+        await Conversation.findByIdAndUpdate(conversationId, {
+          lastMessage: { text: "", senderId: null, createdAt: null },
+        });
+      }
+    }
+
+    // Emit real-time deletion to conversation room
+    if (req.io) {
+      req.io.to(conversationId.toString()).emit("message:deleted", {
+        messageId,
+        conversationId: conversationId.toString(),
+      });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * DELETE /api/chat/conversation/:conversationId
+ * Deletes an entire conversation and all its messages.
+ * Only participants can delete. Both participants' messages are removed.
+ * Emits "conversation:deleted" via Socket.IO for real-time removal on the other user.
+ */
+export const deleteConversation = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { conversationId } = req.params;
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) return res.status(404).json({ error: "Conversation not found" });
+    if (!conversation.participants.some((p) => p.equals(userId))) {
+      return res.status(403).json({ error: "Not a participant" });
+    }
+
+    // Delete all messages in this conversation
+    await Message.deleteMany({ conversationId });
+
+    // Delete the conversation itself
+    await Conversation.findByIdAndDelete(conversationId);
+
+    // Emit to the other participant so their UI updates in real-time
+    if (req.io) {
+      const otherUserId = conversation.participants.find(
+        (p) => p.toString() !== userId.toString()
+      );
+      if (otherUserId) {
+        const otherSocketId = req.onlineUsers?.get(otherUserId.toString());
+        if (otherSocketId) {
+          req.io.to(otherSocketId).emit("conversation:deleted", {
+            conversationId: conversationId.toString(),
+          });
+        }
+      }
+    }
+
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -16,7 +16,7 @@ router.get("/search", auth, async (req, res) => {
     if (bloodGroup) query.patientBloodGroup = bloodGroup;
     if (district) query.district = district;
     if (urgency) query.urgency = urgency;
-    const requests = await Request.find(query).populate("requester", "name email").populate("acceptedBy", "name phone bloodGroup").sort({ createdAt: -1 });
+    const requests = await Request.find(query).populate("requester", "name email photo").populate("acceptedBy", "name phone bloodGroup").sort({ createdAt: -1 });
     res.json({ requests });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -36,7 +36,7 @@ router.get("/my", auth, async (req, res) => {
 // GET /api/requests
 router.get("/", auth, async (req, res) => {
   try {
-    const requests = await Request.find().populate("requester", "name email").populate("acceptedBy", "name phone bloodGroup").sort({ createdAt: -1 });
+    const requests = await Request.find().populate("requester", "name email photo").populate("acceptedBy", "name phone bloodGroup").sort({ createdAt: -1 });
     res.json({ requests });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -74,7 +74,7 @@ router.get("/test-email", auth, async (req, res) => {
 // GET /api/requests/:id — AFTER /search, /my, and /test-email
 router.get("/:id", auth, async (req, res) => {
   try {
-    const request = await Request.findById(req.params.id).populate("requester", "name email").populate("acceptedBy", "name phone bloodGroup");
+    const request = await Request.findById(req.params.id).populate("requester", "name email photo").populate("acceptedBy", "name phone bloodGroup");
     if (!request) return res.status(404).json({ error: "Request not found" });
     res.json({ request });
   } catch (err) {
@@ -162,7 +162,7 @@ router.patch("/:id/accept", auth, async (req, res) => {
     } catch (notifErr) {
       console.error("[Notification] Failed to create accept notification:", notifErr.message);
     }
-    const populated = await request.populate("requester", "name email").populate("acceptedBy", "name phone bloodGroup");
+    const populated = await request.populate("requester", "name email photo").populate("acceptedBy", "name phone bloodGroup");
     res.json({ request: populated });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -187,7 +187,7 @@ router.patch("/:id/complete", auth, async (req, res) => {
     } catch (notifErr) {
       console.error("[Notification] Failed to create complete notification:", notifErr.message);
     }
-    const populated = await request.populate("requester", "name email").populate("acceptedBy", "name phone bloodGroup");
+    const populated = await request.populate("requester", "name email photo").populate("acceptedBy", "name phone bloodGroup");
     res.json({ request: populated });
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -37,12 +37,12 @@ const io = new Server(httpServer, {
 });
 
 // Initialize Socket and get online users map
-const onlineUsers = initSocket(io);
+initSocket(io);
 
 // Make io and onlineUsers available to chat routes via req
 app.use((req, res, next) => {
   req.io = io;
-  req.onlineUsers = onlineUsers;
+  req.onlineUsers = io.onlineUsers;
   next();
 });
 

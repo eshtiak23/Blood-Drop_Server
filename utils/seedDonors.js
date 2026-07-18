@@ -55,7 +55,7 @@ const seed = async () => {
         lastDonationDate: d.lastDonated || null,
       };
     });
-    await User.insertMany(donorDocs);
+    await User.create(donorDocs);
     console.log(`Seeded ${donorDocs.length} donors`);
 
     // Seed demo users (must use create() to trigger pre-save password hashing)

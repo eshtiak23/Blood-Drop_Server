@@ -78,7 +78,7 @@ function validateRegisterForm(body) {
   const e4 = validatePhone(body.phone);
   const e5 = validateAge(body.age);
   const e6 = validateBloodGroup(body.bloodGroup);
-  const e7 = validateRequired(body.lastDonationDate, "Last donation date");
+  const e7 = null; // lastDonationDate is optional for new donors
   const e8 = validateDistrict(body.district);
   const e9 = validateArea(body.area);
   if (e1) errors.name = e1;

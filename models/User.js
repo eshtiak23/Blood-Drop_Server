@@ -11,6 +11,8 @@ const userSchema = new mongoose.Schema({
   gender: { type: String, default: "" },
   district: { type: String, default: "" },
   area: { type: String, default: "" },
+  lat: { type: Number, default: null },
+  lng: { type: Number, default: null },
   bio: { type: String, default: "" },
   photo: { type: String, default: "" },
   role: { type: String, enum: ["user", "admin"], default: "user" },

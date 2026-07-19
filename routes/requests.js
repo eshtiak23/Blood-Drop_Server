@@ -221,6 +221,7 @@ router.delete("/:id", auth, async (req, res) => {
     await Request.findByIdAndDelete(req.params.id);
     res.json({ message: "Request deleted" });
   } catch (err) {
+    console.error("[Delete] Failed to delete request:", err.message);
     res.status(500).json({ error: err.message });
   }
 });

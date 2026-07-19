@@ -26,7 +26,7 @@ router.get("/search", auth, async (req, res) => {
 // GET /api/requests/my — MUST be before /:id
 router.get("/my", auth, async (req, res) => {
   try {
-    const requests = await Request.find({ requester: req.user._id }).sort({ createdAt: -1 });
+    const requests = await Request.find({ requester: req.user._id }).populate("requester", "name email photo").populate("acceptedBy", "name phone bloodGroup").sort({ createdAt: -1 });
     res.json({ requests });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -174,9 +174,14 @@ router.patch("/:id/complete", auth, async (req, res) => {
   try {
     const request = await Request.findById(req.params.id);
     if (!request) return res.status(404).json({ error: "Request not found" });
-    if (request.status !== "accepted") return res.status(400).json({ error: "Request is not accepted" });
+    if (request.status !== "accepted") return res.status(400).json({ error: "Request cannot be completed in its current state" });
+    const userId = req.user._id.toString();
+    if (userId !== request.requester.toString() && userId !== request.acceptedBy?.toString()) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
     request.status = "completed";
     await request.save();
+    // Notify requester
     try {
       await Notification.create({
         userId: request.requester,
@@ -185,7 +190,20 @@ router.patch("/:id/complete", auth, async (req, res) => {
         message: `Your blood request for ${request.patientName} has been completed`,
       });
     } catch (notifErr) {
-      console.error("[Notification] Failed to create complete notification:", notifErr.message);
+      console.error("[Notification] Failed to create complete notification for requester:", notifErr.message);
+    }
+    // Notify donor
+    if (request.acceptedBy && request.acceptedBy.toString() !== userId) {
+      try {
+        await Notification.create({
+          userId: request.acceptedBy,
+          type: "request_completed",
+          title: "Request Completed",
+          message: `The blood request for ${request.patientName} has been marked as completed`,
+        });
+      } catch (notifErr) {
+        console.error("[Notification] Failed to create complete notification for donor:", notifErr.message);
+      }
     }
     const populated = await request.populate("requester", "name email photo").populate("acceptedBy", "name phone bloodGroup");
     res.json({ request: populated });

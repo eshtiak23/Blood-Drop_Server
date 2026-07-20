@@ -59,7 +59,7 @@ router.get("/me", auth, async (req, res) => {
 // PUT /api/auth/me
 router.put("/me", auth, async (req, res) => {
   try {
-    const allowed = ["name", "phone", "age", "bloodGroup", "district", "area", "bio", "photo", "isAvailable", "lastDonationDate"];
+    const allowed = ["name", "nickname", "phone", "age", "bloodGroup", "district", "area", "bio", "photo", "isAvailable", "lastDonationDate"];
     const updates = {};
     allowed.forEach((field) => { if (req.body[field] !== undefined) updates[field] = req.body[field]; });
     const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true });

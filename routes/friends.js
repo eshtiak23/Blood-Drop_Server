@@ -124,6 +124,7 @@ router.post("/send/:userId", async (req, res) => {
           type: "friend_accepted",
           title: "Connection Accepted",
           message: `${req.user.name} accepted your connection request`,
+          link: "/connect",
         });
       } catch (notifErr) {
         console.error("[Notification] Failed to create auto-accept notification:", notifErr.message);
@@ -162,6 +163,7 @@ router.post("/send/:userId", async (req, res) => {
         type: "friend_request",
         title: "Connection Request",
         message: `${req.user.name} wants to connect with you`,
+        link: "/connect",
       });
     } catch (notifErr) {
       console.error("[Notification] Failed to create friend request notification:", notifErr.message);
@@ -200,6 +202,7 @@ router.patch("/accept/:requestId", async (req, res) => {
         type: "friend_accepted",
         title: "Connection Accepted",
         message: `${req.user.name} accepted your connection request`,
+        link: "/connect",
       });
     } catch (notifErr) {
       console.error("[Notification] Failed to create friend accept notification:", notifErr.message);

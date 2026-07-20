@@ -179,6 +179,7 @@ router.post("/", auth, async (req, res) => {
         type: "blood_request",
         title: "New Blood Request",
         message: `${req.user.name} needs ${req.body.unitsRequired} unit(s) of ${req.body.patientBloodGroup} blood at ${req.body.hospital || req.body.district}`,
+        link: `/requests/${request._id}`,
       }));
       await Notification.insertMany(notifications);
     }
@@ -252,6 +253,7 @@ router.patch("/:id/accept", auth, async (req, res) => {
         type: "request_accepted",
         title: "Request Accepted",
         message: `${req.user.name} (${req.user.phone}) accepted your blood request for ${request.patientName}`,
+        link: `/requests/${request._id}`,
       });
     } catch (notifErr) {
       console.error("[Notification] Failed to create accept notification:", notifErr.message);
@@ -296,6 +298,7 @@ router.patch("/:id/complete", auth, async (req, res) => {
         type: "request_completed",
         title: "Request Completed",
         message: `Your blood request for ${request.patientName} has been completed`,
+        link: `/requests/${request._id}`,
       });
     } catch (notifErr) {
       console.error("[Notification] Failed to create complete notification for requester:", notifErr.message);
@@ -309,6 +312,7 @@ router.patch("/:id/complete", auth, async (req, res) => {
           type: "request_completed",
           title: "Request Completed",
           message: `The blood request for ${request.patientName} has been marked as completed`,
+          link: `/requests/${request._id}`,
         });
       } catch (notifErr) {
         console.error("[Notification] Failed to create complete notification for donor:", notifErr.message);

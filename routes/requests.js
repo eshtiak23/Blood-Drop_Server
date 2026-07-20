@@ -70,6 +70,26 @@ router.get("/my", auth, async (req, res) => {
 });
 
 /**
+ * GET /api/requests/donation-history — Get requests the current user donated to
+ * Purpose: Show the user's donation history (requests they accepted and completed)
+ * Called by: DashboardPage Donation History section
+ * Auth: Required
+ */
+router.get("/donation-history", auth, async (req, res) => {
+  try {
+    const requests = await Request.find({
+      acceptedBy: req.user._id,
+      status: "completed",
+    })
+      .populate("requester", "name photo bloodGroup")
+      .sort({ updatedAt: -1 });
+    res.json({ requests });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
  * GET /api/requests — Get ALL blood requests
  * Purpose: Show all open requests for donors to browse
  * Called by: RequestListPage (All Requests tab)

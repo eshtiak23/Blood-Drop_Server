@@ -47,7 +47,7 @@ router.get("/search", auth, async (req, res) => {
     if (district) query.district = district;
     if (urgency) query.urgency = urgency;
     // Populate requester name/email/photo for display, and acceptedBy for donor info
-    const requests = await Request.find(query).populate("requester", "name email photo").populate("acceptedBy", "name phone bloodGroup").sort({ createdAt: -1 });
+    const requests = await Request.find(query).populate("requester", "name email photo").populate("acceptedBy", "name email phone bloodGroup").sort({ createdAt: -1 });
     res.json({ requests });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -62,7 +62,7 @@ router.get("/search", auth, async (req, res) => {
  */
 router.get("/my", auth, async (req, res) => {
   try {
-    const requests = await Request.find({ requester: req.user._id }).populate("requester", "name email photo").populate("acceptedBy", "name phone bloodGroup").sort({ createdAt: -1 });
+    const requests = await Request.find({ requester: req.user._id }).populate("requester", "name email photo").populate("acceptedBy", "name email phone bloodGroup").sort({ createdAt: -1 });
     res.json({ requests });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -97,7 +97,7 @@ router.get("/donation-history", auth, async (req, res) => {
  */
 router.get("/", auth, async (req, res) => {
   try {
-    const requests = await Request.find().populate("requester", "name email photo").populate("acceptedBy", "name phone bloodGroup").sort({ createdAt: -1 });
+    const requests = await Request.find().populate("requester", "name email photo").populate("acceptedBy", "name email phone bloodGroup").sort({ createdAt: -1 });
     res.json({ requests });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -147,7 +147,7 @@ router.get("/test-email", auth, async (req, res) => {
  */
 router.get("/:id", auth, async (req, res) => {
   try {
-    const request = await Request.findById(req.params.id).populate("requester", "name email photo").populate("acceptedBy", "name phone bloodGroup");
+    const request = await Request.findById(req.params.id).populate("requester", "name email photo").populate("acceptedBy", "name email phone bloodGroup");
     if (!request) return res.status(404).json({ error: "Request not found" });
     res.json({ request });
   } catch (err) {
@@ -279,7 +279,7 @@ router.patch("/:id/accept", auth, async (req, res) => {
       console.error("[Notification] Failed to create accept notification:", notifErr.message);
     }
 
-    const populated = await request.populate("requester", "name email photo").populate("acceptedBy", "name phone bloodGroup");
+    const populated = await Request.findById(request._id).populate("requester", "name email photo").populate("acceptedBy", "name email phone bloodGroup");
     res.json({ request: populated });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -339,7 +339,7 @@ router.patch("/:id/complete", auth, async (req, res) => {
       }
     }
 
-    const populated = await request.populate("requester", "name email photo").populate("acceptedBy", "name phone bloodGroup");
+    const populated = await Request.findById(request._id).populate("requester", "name email photo").populate("acceptedBy", "name email phone bloodGroup");
     res.json({ request: populated });
   } catch (err) {
     res.status(500).json({ error: err.message });

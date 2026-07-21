@@ -20,7 +20,7 @@ router.get("/search", async (req, res) => {
     if (bloodGroup) query.bloodGroup = bloodGroup;
     if (district) query.district = district;
     if (area) query.area = area;
-    let donors = await User.find(query).select("-password -email -__v -phone").sort({ createdAt: -1 }).lean();
+    let donors = await User.find(query).select("-password -__v -phone").sort({ createdAt: -1 }).lean();
     if (lat && lng && radius) {
       const userLat = parseFloat(lat);
       const userLng = parseFloat(lng);
@@ -39,7 +39,7 @@ router.get("/search", async (req, res) => {
 router.get("/leaderboard", async (req, res) => {
   try {
     const donors = await User.find({ bloodGroup: { $ne: "" } })
-      .select("-password -email -__v -phone")
+      .select("-password -__v -phone")
       .sort({ totalDonations: -1, lastDonationDate: 1, createdAt: 1 })
       .lean();
     res.json({ donors });
@@ -51,7 +51,7 @@ router.get("/leaderboard", async (req, res) => {
 // GET /api/donors/:id
 router.get("/:id", async (req, res) => {
   try {
-    const donor = await User.findById(req.params.id).select("-password -email -__v -phone").lean();
+    const donor = await User.findById(req.params.id).select("-password -__v -phone").lean();
     if (!donor) return res.status(404).json({ error: "Donor not found" });
     res.json({ donor });
   } catch (err) {

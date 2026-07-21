@@ -17,7 +17,7 @@ router.get("/check/:donorId", auth, async (req, res) => {
 // GET /api/bookmarks
 router.get("/", auth, async (req, res) => {
   try {
-    const bookmarks = await Bookmark.find({ userId: req.user._id }).populate("donorId", "-password -email -__v");
+    const bookmarks = await Bookmark.find({ userId: req.user._id }).populate("donorId", "-password -__v");
     res.json({ bookmarks });
   } catch (err) {
     res.status(500).json({ error: err.message });
